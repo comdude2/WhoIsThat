@@ -1,0 +1,4 @@
+name: WhoIsThat
+main: net.mcviral.dev.plugins.whoisthat.main.WhoIsThat
+version: 1.0
+author: comdude2
