@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 
 import net.mcviral.dev.plugins.whoisthat.main.WhoIsThat;
 
@@ -17,11 +18,9 @@ public class Converter{
 	
 	public Converter(WhoIsThat that){
 		plugin = that;
-		File f = new File(plugin.getDataFolder() + "/To Convert/");
-		if (!f.exists()){
-			f.mkdir();
-		}
 		if (plugin.getConfig().getBoolean("convert") == true){
+			//File f = new File("");
+			//readDAT(new File(f.getAbsoluteFile() + "/world/playerdata/bc67e253-ddee-4fc9-8675-97943b6ab0a3.dat"));
 			convertPlayers();
 			//plugin.getConfig().set("convert", false);
 			//plugin.saveConfig();
@@ -40,14 +39,61 @@ public class Converter{
 		//plugin.log.info("");
 		plugin.log.info("Starting conversion of players...");
 		for (OfflinePlayer op : plugin.getServer().getOfflinePlayers()){
-			f= new File(plugin.getDataFolder() + "/Data/Players/");
+			f= new File(plugin.getDataFolder() + "/Data/Players/" + op.getUniqueId().toString() + ".yml");
 			if (!f.exists()){
 				l = l + 1L;
-				createYaml(plugin.getDataFolder() + "/Data/Players/" + op.getUniqueId().toString());
-				fm = new FileManager(plugin, "Data/Players/", op.getUniqueId().toString());
-				fm.getYAML().set("name", op.getPlayer().getName());
-				fm.getYAML().set("firstPlayed", op.getFirstPlayed());
-				fm.saveYAML();
+				if (op.getUniqueId() != null){
+					if ((op.getName() != null) && (op.getFirstPlayed() != 0)){
+						createYaml(plugin.getDataFolder() + "/Data/Players/" + op.getUniqueId().toString());
+						fm = new FileManager(plugin, "Data/Players/", op.getUniqueId().toString());
+						fm.getYAML().set("name", op.getName());
+						fm.getYAML().set("firstPlayed", op.getFirstPlayed());
+						fm.saveYAML();
+					}else{
+						plugin.log.info("Couldn't convert an offline player as they had a NULL Player name or first join.");
+						if (op.getName() != null){
+							plugin.log.info("Player name: " + op.getName());
+						}
+						//break;
+					}
+				}else{
+					plugin.log.info("Couldn't convert an offline player as they had a NULL UUID.");
+					if (op.getName() != null){
+						plugin.log.info("Player name: " + op.getName());
+					}
+					//break;
+				}
+			}else{
+				//There was already a .yml for this player
+			}
+		}
+		for (Player op : plugin.getServer().getOnlinePlayers()){
+			f= new File(plugin.getDataFolder() + "/Data/Players/" + op.getUniqueId().toString() + ".yml");
+			if (!f.exists()){
+				l = l + 1L;
+				if (op.getUniqueId() != null){
+					if ((op.getName() != null) && (op.getFirstPlayed() != 0)){
+						createYaml(plugin.getDataFolder() + "/Data/Players/" + op.getUniqueId().toString());
+						fm = new FileManager(plugin, "Data/Players/", op.getUniqueId().toString());
+						fm.getYAML().set("name", op.getName());
+						fm.getYAML().set("firstPlayed", op.getFirstPlayed());
+						fm.saveYAML();
+					}else{
+						plugin.log.info("Couldn't convert a player as they had a NULL Player name or first join.");
+						if (op.getName() != null){
+							plugin.log.info("Player name: " + op.getName());
+						}
+						//break;
+					}
+				}else{
+					plugin.log.info("Couldn't convert a player as they had a NULL UUID.");
+					if (op.getName() != null){
+						plugin.log.info("Player name: " + op.getName());
+					}
+					//break;
+				}
+			}else{
+				//There was already a .yml for this player
 			}
 		}
 		plugin.log.info(l + " players converted.");
@@ -63,25 +109,6 @@ public class Converter{
 			folder.mkdirs();
 			plugin.log.info("'Players' folder not found, created one and skipped file check.");
 			return -1;
-		}
-	}
-	
-	public void checkForFilesToConvert(){
-		List <File> tempfiles = new LinkedList <File> ();
-		LinkedList <File> files = new LinkedList <File> ();
-		File folder = new File(plugin.getDataFolder() + "/To Convert/");
-		if (folder.exists()){
-			tempfiles = Arrays.asList(folder.listFiles());
-			Long l = 0L;
-			for (File f : tempfiles){
-				if (f.getName().endsWith(".yml")){
-					files.add(f);
-					l = l + 1L;
-				}
-			}
-			plugin.log.info(l + " files found for conversion.");
-		}else{
-			plugin.log.info("'To Convert' folder not found, created one and skipped file check.");
 		}
 	}
 	
@@ -108,10 +135,12 @@ public class Converter{
 				String name = null;
 				try{
 					name = fm.getYAML().getString("name");
+					plugin.log.info("Name found: " + name);
+					return name;
 				}catch(Exception e){
 					e.printStackTrace();
 				}
-				return name;
+				return null;
 			}
 			return null;
 		}else{
